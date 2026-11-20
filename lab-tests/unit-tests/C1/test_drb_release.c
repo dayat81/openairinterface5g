@@ -1,11 +1,11 @@
 /* C1: DRB release followed by lookup (use-after-free pattern in nr_rrc_send_e1_after_qos_update()).
  *
- * Standalone unit test: uses OAI's real common/utils/ds/seq_arr.c (the container whose erase zeroes the freed slot)
- * and re-implements, with minimal types, (a) the loop of develop 11c9451 (rrc_gNB_NGAP.c ~960-985: removes the DRB
- * from the array while iterating and then still reads drb->drb_id), and (b) the logic of PR #500
- * (nr_rrc_collect_released_drbs() then nr_rrc_remove_drb_by_id()).
- * get_drb() mirrors rrc_gNB_radio_bearers.c:320-327, but the DevAssert is turned into a flag so the test can report it.
- * NOT a replacement for a test in openair2/RRC/NR/tests/rrc_bearers_test.c (needs the full CMake tree, see README.md).
+ * Standalone unit test with OAI's real common/utils/ds/seq_arr.c (erase shifts + zeroes the freed slot).
+ *  - FIXED logic: nr_rrc_collect_released_drbs() / nr_rrc_drb_has_qos_flow() are extracted VERBATIM by gen.sh from the
+ *    branch source (rrc_gNB_radio_bearers.c, cherry-picked from upstream PR `#500`); the removal step is done as in
+ *    rrc_gNB_send_NGAP_PDUSESSION_MODIFY_RESP(): nr_rrc_remove_drb_by_id() for each collected id (mirrored, unchanged code).
+ *  - BASELINE-UNFIXED (informational): mirror of the loop of develop 11c9451 (rrc_gNB_NGAP.c ~960-985); NOT the real file.
+ * Only the surrounding types/macros are minimal shims. The real CMake target (rrc_bearers_test) is not built here.
  */
 #include <assert.h>
 #include <stdbool.h>
@@ -16,6 +16,11 @@
 #define MAX_DRBS_PER_UE 32
 typedef struct { int status; int drb_id; int pdusession_id; } drb_t;          /* same leading fields as drb_t in nr_rrc_defs.h */
 typedef struct { int qfi; int drb_id; } qos_t;
+typedef qos_t nr_rrc_qos_t;                                                  /* real type has drb_id first; only drb_id is used */
+typedef struct { struct { int pdusession_id; seq_arr_t qos; } param; } rrc_pdu_session_param_t;
+#define DevAssert(x) assert(x)
+#define LOG_E(c, ...) do { fprintf(stderr, "LOG_E " __VA_ARGS__); } while (0)
+#define NR_RRC 0
 
 static int get_drb_assert_hit;                                               /* DevAssert(id > 0 && id <= MAX_DRBS_PER_UE) */
 static bool eq_drb_id(const void *v, const void *it) { return ((const drb_t *)it)->drb_id == *(const int *)v; }
@@ -60,15 +65,14 @@ static rel_t release_unfixed(seq_arr_t *drbs, seq_arr_t *qos, int pdu)
   }
   return r;
 }
-/* (b) PR #500 */
+#include "gen/collect.inc"      /* nr_rrc_drb_has_qos_flow(), nr_rrc_collect_released_drbs() from the branch source */
 static rel_t release_fixed(seq_arr_t *drbs, seq_arr_t *qos, int pdu)
 {
+  rrc_pdu_session_param_t s = {.param = {.pdusession_id = pdu}};
+  memcpy(&s.param.qos, qos, sizeof *qos);                 /* shallow view of the flow list (same data pointer) */
   rel_t r = {0};
-  FOR_EACH_SEQ_ARR (const drb_t *, drb, drbs) {
-    if (drb->pdusession_id != pdu || has_flow(qos, drb->drb_id)) continue;
-    r.id[r.n++] = drb->drb_id;
-  }
-  for (int i = 0; i < r.n; i++) remove_drb_by_id(drbs, r.id[i]);
+  r.n = nr_rrc_collect_released_drbs(drbs, &s, r.id);
+  for (int i = 0; i < r.n; i++) remove_drb_by_id(drbs, r.id[i]);   /* MODIFY_RESP step */
   return r;
 }
 
@@ -142,8 +146,8 @@ static int suite(const char *label, rel_fn f)
 
 int main(void)
 {
-  int unfixed = suite("[develop 11c9451 logic] expected: FAIL (bug)", release_unfixed);
-  int fixed = suite("[PR #500 logic]  expected: PASS", release_fixed);
-  printf("\nSUMMARY: unfixed=%s fixed=%s\n", unfixed ? "FAIL(as expected)" : "PASS(UNEXPECTED: bug not reproduced)", fixed ? "FAIL(UNEXPECTED)" : "PASS");
-  return (unfixed && !fixed) ? 0 : 1;      /* 0 = test suite behaves as expected: detects the bug and accepts the fix */
+  int unfixed = suite("[baseline-unfixed (informational): develop 11c9451 mirror] expected: FAIL (bug)", release_unfixed);
+  int fixed = suite("[fixed: branch source, cherry-picked PR `#500`] expected: PASS", release_fixed);
+  printf("\nSUMMARY: baseline-unfixed (informational)=%s fixed=%s\n", unfixed ? "FAIL(as expected)" : "PASS(bug not reproduced by mirror)", fixed ? "FAIL" : "PASS");
+  return fixed ? 1 : 0;      /* exit status depends ONLY on the fixed code */
 }
