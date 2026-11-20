@@ -1,0 +1,35 @@
+# C1 unit test result (box, 2026-11-20 15:31 WIB); branch contents = develop 11c9451 + upstream PR #500 (4 commits)
+[baseline-unfixed (informational): develop 11c9451 mirror] expected: FAIL (bug)
+  U1 release last DRB (id 2)                   released=[0] left=1 get_drb_assert=1
+    FAIL: iterator ran past the end of the DRB array after an in-loop erase
+    FAIL: get_drb() called with an invalid id (assertion rrc_gNB_radio_bearers.c:322 in the real code)
+    FAIL: released id[0]=0 expected 2
+  U2 release first DRB, second still used      released=[2] left=1 get_drb_assert=0
+    FAIL: released id[0]=2 expected 1
+  U3 release two consecutive DRBs              released=[2] left=2 get_drb_assert=0
+    FAIL: released 1 DRBs, expected 2
+    FAIL: released id[0]=2 expected 1
+    FAIL: 2 DRBs left, expected 1
+  U4 all DRBs still used -> no-op              released=[] left=2 get_drb_assert=0
+  U5 other PDU session untouched               released=[3] left=2 get_drb_assert=0
+    FAIL: released id[0]=3 expected 2
+  U6 sole DRB released -> empty list           released=[0] left=0 get_drb_assert=1
+    FAIL: iterator ran past the end of the DRB array after an in-loop erase
+    FAIL: get_drb() called with an invalid id (assertion rrc_gNB_radio_bearers.c:322 in the real code)
+    FAIL: released id[0]=0 expected 1
+  U7 50 add/release cycles                     bad_cycles=50/50 get_drb_assert=50
+    FAIL: 50 of 50 cycles inconsistent
+    FAIL: get_drb assertion hit
+  => FAIL (13 failed check(s))
+[fixed: branch source, cherry-picked PR `#500`] expected: PASS
+  U1 release last DRB (id 2)                   released=[2] left=1 get_drb_assert=0
+  U2 release first DRB, second still used      released=[1] left=1 get_drb_assert=0
+  U3 release two consecutive DRBs              released=[1,2] left=1 get_drb_assert=0
+  U4 all DRBs still used -> no-op              released=[] left=2 get_drb_assert=0
+  U5 other PDU session untouched               released=[2] left=2 get_drb_assert=0
+  U6 sole DRB released -> empty list           released=[1] left=0 get_drb_assert=0
+  U7 50 add/release cycles                     bad_cycles=0/50 get_drb_assert=0
+  => PASS (0 failed check(s))
+
+SUMMARY: baseline-unfixed (informational)=FAIL(as expected) fixed=PASS
+exit=0

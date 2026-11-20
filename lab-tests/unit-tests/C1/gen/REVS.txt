@@ -1,0 +1,1 @@
+collect.inc extracted from openair2/RRC/NR/rrc_gNB_radio_bearers.c of the branch (develop 11c9451 + upstream PR `#500` cherry-picked)
