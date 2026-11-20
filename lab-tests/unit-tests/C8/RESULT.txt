@@ -1,0 +1,18 @@
+# C8 unit test result (box, 2026-11-20 15:31 WIB); branch contents = develop 11c9451 + 4-line clamp (80cff92 content)
+[baseline-unfixed (informational): BASE_REV source] stale-MCS cases: expected FAIL (bug)
+    FAIL: unpatched path=retx table=0: 3/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=retx table=1: 4/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=retx table=2: 3/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=!bler_updated table=0: 3/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=!bler_updated table=1: 4/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=!bler_updated table=2: 3/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched ul_bler_stats.mcs=28 reserved in table 1
+    FAIL: unpatched multi: reserved MCS left (31,29)
+  => FAIL (8/267 checks failed)
+[baseline-unfixed (informational): BASE_REV source] regression-only cases: expected PASS
+  => PASS (0/258 checks failed)
+[fixed: checked-out branch source with clamp] all cases: expected PASS
+  => PASS (0/267 checks failed)
+
+SUMMARY: baseline-unfixed stale cases (informational)=FAIL(as expected), baseline regression (informational)=PASS, fixed branch=PASS
+exit=0
