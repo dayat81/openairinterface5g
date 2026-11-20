@@ -1,1 +1,1 @@
-develop=11c9451 patched=80cff92
+patched = branch working tree (develop 11c9451 + 4-line clamp, content of local 80cff92); base = origin/develop @11c9451

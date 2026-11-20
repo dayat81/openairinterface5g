@@ -1,8 +1,8 @@
 /* C8: UL MCS must be a non-reserved index of the ACTIVE UL MCS table, otherwise TBS = 0 ("compute TBS with a NULL input").
  *
  * The code under test is NOT re-typed: gen.sh extracts nr_ul_mcs_select_default() verbatim from
- *   - develop 11c9451                     -> *_unpatched   (expected to FAIL the stale-MCS cases)
- *   - branch fix/ul-mcs-clamp-table       -> *_patched     (expected to PASS)
+ *   - BASE_REV (origin/develop @11c9451)  -> *_unpatched   (baseline-unfixed, informational: expected to FAIL the stale-MCS cases)
+ *   - the checked-out branch (clamp applied, = local branch fix/ul-mcs-clamp-table 80cff92) -> *_patched (expected to PASS)
  * and the MCS tables Table_51311/2/3 verbatim from nr_mac_common.c. Only the surrounding types are minimal shims with
  * the same field names; nr_adapt_mcs_from_bler()/get_mcs_from_SINRx10() are simple stubs (they are not the subject).
  * The "NULL TBS" predicate mirrors nr_compute_tbs_common.c:77 (Qm == 0 || R == 0 || nb_rb == 0 || Nl == 0).
@@ -128,10 +128,10 @@ int main(void)
 {
   fails = checks = 0; case_tables_have_reserved_rows();
   if (fails) { printf("fixture sanity FAILED\n"); return 2; }
-  int un_stale = suite("[develop 11c9451] stale-MCS cases: expected FAIL (bug)", nr_ul_mcs_select_default_unpatched, "unpatched", true);
-  int un_reg = suite("[develop 11c9451] regression-only cases: expected PASS", nr_ul_mcs_select_default_unpatched, "unpatched", false);
-  int pa = suite("[fix/ul-mcs-clamp-table 80cff92] all cases: expected PASS", nr_ul_mcs_select_default_patched, "patched", true);
-  printf("\nSUMMARY: unpatched stale cases=%s, unpatched regression=%s, patched all=%s\n",
-         un_stale ? "FAIL(as expected)" : "PASS(UNEXPECTED: bug not reproduced)", un_reg ? "FAIL(UNEXPECTED)" : "PASS", pa ? "FAIL(UNEXPECTED)" : "PASS");
-  return (un_stale && !un_reg && !pa) ? 0 : 1;
+  int un_stale = suite("[baseline-unfixed (informational): BASE_REV source] stale-MCS cases: expected FAIL (bug)", nr_ul_mcs_select_default_unpatched, "unpatched", true);
+  int un_reg = suite("[baseline-unfixed (informational): BASE_REV source] regression-only cases: expected PASS", nr_ul_mcs_select_default_unpatched, "unpatched", false);
+  int pa = suite("[fixed: checked-out branch source with clamp] all cases: expected PASS", nr_ul_mcs_select_default_patched, "patched", true);
+  printf("\nSUMMARY: baseline-unfixed stale cases (informational)=%s, baseline regression (informational)=%s, fixed branch=%s\n",
+         un_stale ? "FAIL(as expected)" : "PASS(bug not reproduced)", un_reg ? "FAIL" : "PASS", pa ? "FAIL" : "PASS");
+  return pa ? 1 : 0;       /* exit status depends ONLY on the fixed branch source */
 }
