@@ -1,0 +1,16 @@
+[develop 11c9451] stale-MCS cases: expected FAIL (bug)
+    FAIL: unpatched path=retx table=0: 3/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=retx table=1: 4/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=retx table=2: 3/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=!bler_updated table=0: 3/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=!bler_updated table=1: 4/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched path=!bler_updated table=2: 3/32 stale inputs give a reserved/NULL-TBS MCS
+    FAIL: unpatched ul_bler_stats.mcs=28 reserved in table 1
+    FAIL: unpatched multi: reserved MCS left (31,29)
+  => FAIL (8/267 checks failed)
+[develop 11c9451] regression-only cases: expected PASS
+  => PASS (0/258 checks failed)
+[fix/ul-mcs-clamp-table 80cff92] all cases: expected PASS
+  => PASS (0/267 checks failed)
+
+SUMMARY: unpatched stale cases=FAIL(as expected), unpatched regression=PASS, patched all=PASS
